@@ -12,8 +12,13 @@ import chainsawManSrc from './textures/chainsaw_man.jpg';
 import evangelionSrc from './textures/evangelion.jpg';
 import cowboyBebopSrc from './textures/cowboy_bebop.jpg';
 import jojoSrc from './textures/jojo.jpg';
+import floorSrc from './textures/floor.jpg';
+import ceilingSrc from './textures/ceiling.jpg';
 
 const DEBUG = false;
+const HALL_DEPTH = 65;
+const HALL_WIDTH = 20;
+
 let controls;
 let stats;
 
@@ -58,32 +63,70 @@ scene.add( new RectAreaLightHelper( rectLight3 ) );
 
 // Floor
 
-const geoFloor = new THREE.BoxGeometry( 500, 0.1, 2000 );
-const matStdFloor = new THREE.MeshStandardMaterial( { color: 0x808080, roughness: 0.1, metalness: 0 } );
+const floorTexture = new THREE.TextureLoader().load(floorSrc, (texture) => {
+  texture.rotation = Math.PI / 2;
+  texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
+  // texture.
+});
+
+const geoFloor = new THREE.BoxGeometry( HALL_WIDTH, 0.1, HALL_DEPTH );
+const matStdFloor = new THREE.MeshStandardMaterial( { map: floorTexture, roughness: 0.5, metalness: 0 } );
 const mshStdFloor = new THREE.Mesh( geoFloor, matStdFloor );
+mshStdFloor.position.z = - geoFloor.parameters.depth / 2 + 5;
 scene.add( mshStdFloor );
 
 // Ceiling
 
-const matStdCeiling = new THREE.MeshStandardMaterial( { color: 0x808080, roughness: 1, metalness: 0 } );
+const ceilingTexture = new THREE.TextureLoader().load(ceilingSrc, (texture) => {
+  //texture.rotation = Math.PI / 2;
+  texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
+  // texture.
+})
+
+const matStdCeiling = new THREE.MeshStandardMaterial( { map: ceilingTexture, roughness: 1, metalness: 0 } );
 const mshStdCeiling = new THREE.Mesh( geoFloor, matStdCeiling );
 mshStdCeiling.position.y = 12;
+mshStdCeiling.position.z = - geoFloor.parameters.depth / 2 + 5;
 scene.add( mshStdCeiling );
 
 // Walls
 
-const wall_distance = 10;
+const wall_distance = HALL_WIDTH / 2;
 
-const geoWall = new THREE.BoxGeometry( 0.1, 500, 2000 );
-const matStdWall = new THREE.MeshStandardMaterial( { color: 0x808080, roughness: 0.5, metalness: 0 } );
+const geoWall = new THREE.BoxGeometry( 0.1, 12, HALL_DEPTH );
+const matStdWall = new THREE.MeshStandardMaterial( { color: 0x3152a1, roughness: 0.5, metalness: 0 } );
 const mshStdLeftWall = new THREE.Mesh( geoWall, matStdWall );
-mshStdLeftWall.position.x = - wall_distance;
+mshStdLeftWall.position.set(- wall_distance, geoWall.parameters.height / 2, - geoWall.parameters.depth / 2 + 5);
 
 const mshStdRightWall = new THREE.Mesh( geoWall, matStdWall );
-mshStdRightWall.position.x = wall_distance;
+mshStdRightWall.position.set(wall_distance, geoWall.parameters.height / 2, - geoWall.parameters.depth / 2 + 5);
 
-scene.add( mshStdLeftWall, mshStdRightWall );
+let walls = [mshStdLeftWall, mshStdRightWall];
 
+scene.add(...walls);
+
+// Add wall-floor protections (i forgot the name and can't seem to google-fu it)
+
+const addWallFloorProtection = (wall) => {
+
+  let geoProtection = new THREE.BoxGeometry(1, 1, wall.geometry.parameters.depth);
+  let matProtection = new THREE.MeshStandardMaterial({ color: 0x704733, roughness: 0.5, metalness: 0 });
+  let mshProtection = new THREE.Mesh(geoProtection, matProtection);
+  mshProtection.position.copy(wall.position);
+  mshProtection.position.y = geoProtection.parameters.height / 2;
+
+  scene.add(mshProtection);
+}
+walls.forEach(addWallFloorProtection);
+
+// Backwall
+
+const geoBackWall = new THREE.BoxGeometry(HALL_WIDTH, 12, 0.01);
+const mshStdBackWall = new THREE.Mesh(geoBackWall, matStdWall);
+mshStdBackWall.position.z = 5.05;
+mshStdBackWall.position.y = geoBackWall.parameters.height / 2;
+
+scene.add(mshStdBackWall);
 
 // Torus Knot
 
@@ -194,3 +237,10 @@ function onWindowResize() {
 
 }
 window.onresize = onWindowResize;
+
+if(DEBUG) {
+  document.getElementById('main').remove();
+  ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
+  ambientLight.position.set(0, 0, 0);
+  scene.add( ambientLight );
+}
