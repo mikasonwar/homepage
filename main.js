@@ -6,6 +6,10 @@ import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLigh
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { MeshBasicMaterial } from 'three';
 
+// Fix pdf reference
+import cvPdf from './documents/cv.pdf';
+document.getElementById('cv-pdf').href = cvPdf;
+
 // Import textures
 import berserkSrc from './textures/berserk.jpg';
 import chainsawManSrc from './textures/chainsaw_man.jpg';
