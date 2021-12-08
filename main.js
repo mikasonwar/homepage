@@ -20,7 +20,7 @@ import floorSrc from './textures/floor.jpg';
 import ceilingSrc from './textures/ceiling.jpg';
 
 const DEBUG = false;
-const HALL_DEPTH = 65;
+const HALL_DEPTH = 75;
 const HALL_WIDTH = 20;
 
 let controls;
