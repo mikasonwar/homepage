@@ -20,7 +20,7 @@ import floorSrc from './textures/floor.jpg';
 import ceilingSrc from './textures/ceiling.jpg';
 
 const DEBUG = false;
-const SHOW_STATS = DEBUG || true;
+const SHOW_STATS = false || DEBUG;
 const HALL_DEPTH = 75;
 const HALL_WIDTH = 20;
 
@@ -42,7 +42,8 @@ const camera = new THREE.PerspectiveCamera(calculateFOV(), window.innerWidth / w
 
 const renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById('bg'),
-  antialias: window.devicePixelRatio > 1
+  antialias: window.devicePixelRatio <= 1,
+  powerPreference: "high-performance"
 });
 
 renderer.setPixelRatio(window.devicePixelRatio);
