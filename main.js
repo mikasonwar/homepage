@@ -29,13 +29,20 @@ let stats;
 
 // Initial setup
 
+function calculateFOV() {
+  let fov = 45;
+  let ratio = window.innerHeight / window.innerWidth;
+
+  return ratio <= 1 ? fov : fov - 15;
+}
+
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(calculateFOV(), window.innerWidth / window.innerHeight, 0.1, 100);
 
 const renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById('bg'),
-  antialias: true
+  antialias: window.devicePixelRatio > 1
 });
 
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -246,6 +253,7 @@ function onWindowResize() {
 
   renderer.setSize( window.innerWidth, window.innerHeight );
   camera.aspect = ( window.innerWidth / window.innerHeight );
+  camera.fov = calculateFOV();
   camera.updateProjectionMatrix();
 
 }
