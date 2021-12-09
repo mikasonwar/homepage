@@ -20,6 +20,7 @@ import floorSrc from './textures/floor.jpg';
 import ceilingSrc from './textures/ceiling.jpg';
 
 const DEBUG = false;
+const SHOW_STATS = DEBUG || true;
 const HALL_DEPTH = 75;
 const HALL_WIDTH = 20;
 
@@ -30,7 +31,7 @@ let stats;
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
 
 const renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById('bg'),
@@ -73,7 +74,7 @@ const floorTexture = new THREE.TextureLoader().load(floorSrc, (texture) => {
   // texture.
 });
 
-const geoFloor = new THREE.BoxGeometry( HALL_WIDTH, 0.1, HALL_DEPTH );
+const geoFloor = new THREE.BoxBufferGeometry( HALL_WIDTH, 0.1, HALL_DEPTH );
 const matStdFloor = new THREE.MeshStandardMaterial( { map: floorTexture, roughness: 0.5, metalness: 0 } );
 const mshStdFloor = new THREE.Mesh( geoFloor, matStdFloor );
 mshStdFloor.position.z = - geoFloor.parameters.depth / 2 + 5;
@@ -97,7 +98,7 @@ scene.add( mshStdCeiling );
 
 const wall_distance = HALL_WIDTH / 2;
 
-const geoWall = new THREE.BoxGeometry( 0.1, 12, HALL_DEPTH );
+const geoWall = new THREE.BoxBufferGeometry( 0.1, 12, HALL_DEPTH );
 const matStdWall = new THREE.MeshStandardMaterial( { color: 0x3152a1, roughness: 0.5, metalness: 0 } );
 const mshStdLeftWall = new THREE.Mesh( geoWall, matStdWall );
 mshStdLeftWall.position.set(- wall_distance, geoWall.parameters.height / 2, - geoWall.parameters.depth / 2 + 5);
@@ -111,10 +112,10 @@ scene.add(...walls);
 
 // Add wall-floor protections (i forgot the name and can't seem to google-fu it)
 
-const addWallFloorProtection = (wall) => {
+let geoProtection = new THREE.BoxBufferGeometry(1, 1, HALL_DEPTH);
+let matProtection = new THREE.MeshStandardMaterial({ color: 0x704733, roughness: 0.5, metalness: 0 });
 
-  let geoProtection = new THREE.BoxGeometry(1, 1, wall.geometry.parameters.depth);
-  let matProtection = new THREE.MeshStandardMaterial({ color: 0x704733, roughness: 0.5, metalness: 0 });
+const addWallFloorProtection = (wall) => {
   let mshProtection = new THREE.Mesh(geoProtection, matProtection);
   mshProtection.position.copy(wall.position);
   mshProtection.position.y = geoProtection.parameters.height / 2;
@@ -125,7 +126,7 @@ walls.forEach(addWallFloorProtection);
 
 // Backwall
 
-const geoBackWall = new THREE.BoxGeometry(HALL_WIDTH, 12, 0.01);
+const geoBackWall = new THREE.BoxBufferGeometry(HALL_WIDTH, 12, 0.01);
 const mshStdBackWall = new THREE.Mesh(geoBackWall, matStdWall);
 mshStdBackWall.position.z = 5.05;
 mshStdBackWall.position.y = geoBackWall.parameters.height / 2;
@@ -134,8 +135,7 @@ scene.add(mshStdBackWall);
 
 // Torus Knot
 
-const geometry = new THREE.TorusKnotGeometry( 1.5, 0.5, 200, 16 );
-// const material = new THREE.MeshToonMaterial( { color: 0xffffff, depthTest: false, gradientMap: 'threeTone' } );
+const geometry = new THREE.TorusKnotBufferGeometry( 1.5, 0.5, 64, 8 );
 const material = new THREE.MeshStandardMaterial( { color: 0xffffff, roughness: 0.1, metalness: 0.2 } );
 const torusKnot = new THREE.Mesh( geometry, material );
 torusKnot.position.set(0, 5, 0);
@@ -145,7 +145,7 @@ camera.lookAt(torusKnot.position);
 
 // Paintings
 
-const paintGeometry = new THREE.BoxGeometry( 0.1, 8, 8 );
+const paintGeometry = new THREE.BoxBufferGeometry( 0.1, 8, 8 );
 const berserkTexture = new THREE.TextureLoader().load(berserkSrc);
 const evangelionTexture = new THREE.TextureLoader().load(evangelionSrc);
 const chainsawManTexture = new THREE.TextureLoader().load(chainsawManSrc);
@@ -191,13 +191,16 @@ if(DEBUG) {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.target.copy(torusKnot.position);
   controls.update();
-  stats = new Stats();
-  document.body.appendChild( stats.dom );
   // controls.enableDamping = true;
   // controls.dampingFactor = 0.25;
   // controls.enableZoom = true;
   const axesHelper = new THREE.AxesHelper( 10 );
   scene.add( axesHelper );
+}
+
+if(SHOW_STATS) {
+  stats = new Stats();
+  document.body.appendChild( stats.dom );
 }
 
 // Scroll Animation
@@ -221,11 +224,17 @@ function animate(time) {
   // torus.rotation.z += 0.01;
 
   // moon.rotation.x += 0.005;
+  if(SHOW_STATS) {
+    console.log("Scene polycount:", renderer.info.render.triangles);
+    console.log("Active Drawcalls:", renderer.info.render.calls);
+    console.log("Textures in Memory", renderer.info.memory.textures);
+    console.log("Geometries in Memory", renderer.info.memory.geometries);
+    stats.update();
+  }
 
   torusKnot.rotation.y = time / 1000;
   if(DEBUG) {
     controls.update();
-    stats.update();
   } else {
     camera.position.x = Math.sin(time / 1000);
   }  
@@ -244,7 +253,4 @@ window.onresize = onWindowResize;
 
 if(DEBUG) {
   document.getElementById('main').remove();
-  ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
-  ambientLight.position.set(0, 0, 0);
-  scene.add( ambientLight );
 }
