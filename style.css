@@ -8,6 +8,10 @@
   :root {
     --spacing: 100px !important;
   }
+
+  section#mobile-warning {
+    display: initial;
+  }
 }
 
 canvas {
@@ -18,8 +22,13 @@ canvas {
 
 :root {
   --dark-bg: rgba(37, 37, 37, 0.95);
+  --warning: rgba(221, 117, 19, 0.9);
   --spacing: 325px;
   --rounding: 10px;
+}
+
+body {
+  background: #383535;
 }
 
 main {
@@ -128,4 +137,15 @@ a:visited {
   height: auto;
   max-height: 35px;
   vertical-align: middle;
+}
+
+section.warning {
+  background: var(--warning);
+  display: none;
+  grid-column: 2 / 13;
+  margin-bottom: 100px;
+}
+
+section.warning.show-warning {
+  display: initial;
 }

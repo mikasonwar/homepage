@@ -15,6 +15,6 @@ npm run dev
 
 Should be all you need to get up and running
 
-I used node.js v13 for this project so make sure you use that or something like it
+I used the lastest version node.js (which at the time was v16) for this project so make sure you use that or something like it
 
 I have also setup a .nvmrc so if you use nvm you can just do `nvm use` inside the folder
