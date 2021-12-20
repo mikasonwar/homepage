@@ -20,7 +20,7 @@ let paintingSrcs = [berserkSrc, evangelionSrc, chainsawManSrc, jojoSrc, cowboyBe
 
 const DEBUG = false;
 const SHOW_STATS = false || DEBUG;
-const HALL_DEPTH = 75;
+const HALL_DEPTH = (paintingSrcs.length * 10) + 25;
 const HALL_WIDTH = 20;
 
 let controls;
