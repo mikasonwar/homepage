@@ -7,12 +7,16 @@ import { MeshBasicMaterial } from 'three';
 
 // Import textures
 import berserkSrc from './textures/berserk.jpg';
-import chainsawManSrc from './textures/chainsaw_man.jpg';
 import evangelionSrc from './textures/evangelion.jpg';
-import cowboyBebopSrc from './textures/cowboy_bebop.jpg';
+import chainsawManSrc from './textures/chainsaw_man.jpg';
 import jojoSrc from './textures/jojo.jpg';
+import cowboyBebopSrc from './textures/cowboy_bebop.jpg';
+import makimaSrc from './textures/makima.jpg';
+
 import floorSrc from './textures/floor.jpg';
 import ceilingSrc from './textures/ceiling.jpg';
+
+let paintingSrcs = [berserkSrc, evangelionSrc, chainsawManSrc, jojoSrc, cowboyBebopSrc, makimaSrc];
 
 const DEBUG = false;
 const SHOW_STATS = false || DEBUG;
@@ -33,9 +37,7 @@ function calculateFOV() {
 
 export function startScene(elementId) {
   const scene = new THREE.Scene();
-
   const camera = new THREE.PerspectiveCamera(calculateFOV(), window.innerWidth / window.innerHeight, 0.1, 100);
-
   const renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById(elementId),
     antialias: window.devicePixelRatio <= 1,
@@ -48,7 +50,6 @@ export function startScene(elementId) {
   renderer.outputEncoding = THREE.sRGBEncoding;
   camera.position.set(0, 5, - 15);
   renderer.render(scene, camera);
-
 
   // Lights
 
@@ -87,9 +88,7 @@ export function startScene(elementId) {
   // Ceiling
 
   const ceilingTexture = new THREE.TextureLoader().load(ceilingSrc, (texture) => {
-    //texture.rotation = Math.PI / 2;
     texture.wrapT = texture.wrapS = THREE.RepeatWrapping;
-    // texture.
   })
 
   const matStdCeiling = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 1, metalness: 0 });
@@ -150,36 +149,26 @@ export function startScene(elementId) {
   // Paintings
 
   const paintGeometry = new THREE.BoxBufferGeometry(0.1, 8, 8);
-  const berserkTexture = new THREE.TextureLoader().load(berserkSrc);
-  const evangelionTexture = new THREE.TextureLoader().load(evangelionSrc);
-  const chainsawManTexture = new THREE.TextureLoader().load(chainsawManSrc);
-  const jojoTexture = new THREE.TextureLoader().load(jojoSrc);
-  const cowboyBebopTexture = new THREE.TextureLoader().load(cowboyBebopSrc);
 
-  const berserkPainting = new THREE.Mesh(paintGeometry, new THREE.MeshStandardMaterial({ map: berserkTexture, roughness: 0.7 }));
-  berserkPainting.position.set(9.9, 6.5, - 10);
+  let paintingTextures = paintingSrcs.map(src => new THREE.TextureLoader().load(src));
 
-  const evangelionPainting = new THREE.Mesh(paintGeometry, new THREE.MeshStandardMaterial({ map: evangelionTexture, roughness: 0.7 }));
-  evangelionPainting.position.set(- 9.9, 6.5, - 20);
+  let paintings = paintingTextures.map((texture, index) => {
+    let painting_z = (index+1) * - 10;
+    let painting_x = (HALL_WIDTH / 2) - 0.1;
+    // Choose side
+    painting_x = index % 2 === 0 ? painting_x : - painting_x;
 
-  const chainsawManPainting = new THREE.Mesh(paintGeometry, new THREE.MeshStandardMaterial({ map: chainsawManTexture, roughness: 0.7 }));
-  chainsawManPainting.position.set(9.9, 6.5, - 30);
-
-  const jojoPainting = new THREE.Mesh(paintGeometry, new THREE.MeshStandardMaterial({ map: jojoTexture, roughness: 0.7 }));
-  jojoPainting.position.set(- 9.9, 6.5, - 40);
-
-  const cowboyBebopPainting = new THREE.Mesh(paintGeometry, new THREE.MeshStandardMaterial({ map: cowboyBebopTexture, roughness: 0.7 }));
-  cowboyBebopPainting.position.set(9.9, 6.5, - 50);
-
-  let paintings = [berserkPainting, evangelionPainting, chainsawManPainting, jojoPainting, cowboyBebopPainting];
+    let painting = new THREE.Mesh(paintGeometry, new THREE.MeshStandardMaterial({ map: texture, roughness: 0.7 }));
+    painting.position.set(painting_x, 6.5, painting_z);
+    return painting;
+  });
 
   scene.add(...paintings);
 
-  // Spotlights
+  // Spotlights for paintings
 
   const generateSpotlightForPainting = (painting) => {
     let spotlight = new THREE.SpotLight(0xffffff, 0.07, 100, -1, 1, 10);
-    // spotlight.lookAt(cowboyBebopPainting.position);
     let paint_light_x = painting.position.x + (painting.position.x < 0 ? 3 : -3);
     spotlight.position.set(paint_light_x, 12, painting.position.z);
     spotlight.target = painting;
@@ -187,7 +176,7 @@ export function startScene(elementId) {
   }
   paintings.forEach(generateSpotlightForPainting);
 
-
+  // Debug
 
   if (DEBUG) {
     const gridHelper = new THREE.GridHelper(200, 50);
@@ -195,9 +184,6 @@ export function startScene(elementId) {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.target.copy(torusKnot.position);
     controls.update();
-    // controls.enableDamping = true;
-    // controls.dampingFactor = 0.25;
-    // controls.enableZoom = true;
     const axesHelper = new THREE.AxesHelper(10);
     scene.add(axesHelper);
   }
@@ -213,21 +199,13 @@ export function startScene(elementId) {
     const t = document.body.getBoundingClientRect().top;
 
     camera.position.z = t * 0.01 - 15;
-    // camera.position.x = t * -0.0002;
-    // camera.rotation.y = t * -0.0002;
   }
-
   document.body.onscroll = moveCamera;
   moveCamera();
 
   // Animation Loop
 
   function animate(time) {
-    // torus.rotation.x += 0.01;
-    // torus.rotation.y += 0.005;
-    // torus.rotation.z += 0.01;
-
-    // moon.rotation.x += 0.005;
     if (SHOW_STATS) {
       console.log("Scene polycount:", renderer.info.render.triangles);
       console.log("Active Drawcalls:", renderer.info.render.calls);
@@ -237,6 +215,7 @@ export function startScene(elementId) {
     }
 
     torusKnot.rotation.y = time / 1000;
+
     if (DEBUG) {
       controls.update();
     } else {
@@ -256,8 +235,8 @@ export function startScene(elementId) {
   }
   window.onresize = onWindowResize;
 
+  // Debug at the end to remove HTML
   if (DEBUG) {
     document.getElementById('main').remove();
   }
-
 }
